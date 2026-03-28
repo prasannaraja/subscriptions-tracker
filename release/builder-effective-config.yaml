@@ -1,0 +1,12 @@
+directories:
+  output: release
+  buildResources: assets
+appId: com.subscriptions.tracker
+productName: Subscriptions
+mac:
+  category: public.app-category.finance
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+electronVersion: 41.1.0
