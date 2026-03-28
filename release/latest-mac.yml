@@ -1,11 +1,11 @@
 version: 0.0.0
 files:
   - url: Subscriptions-0.0.0-arm64-mac.zip
-    sha512: D4fwbTwEMK84dY6Mm3gCbWm7DqBxKrpnRcZw98QZ5r+aOYbGXfPq5P2YAUv0MDDOJIKn5fnmLIhHELax9fZV6Q==
-    size: 110303976
+    sha512: hh/DFWl0ETPm5UBVtS1xZVQotzcFPN2RAI6eodTEu6H1ucK5cUp28ZKbJO6UwQWp2r2XYTwonG3gCenr0DxEzw==
+    size: 110087427
   - url: Subscriptions-0.0.0-arm64.dmg
-    sha512: txWUKMwib4gnzaWeqhTPHdvLzsWRnKBVHVbpQ/7VM/mICFxK+jkPKpHJaVAVMMOMdd8ShXiCh34ZQPZOVioI4Q==
-    size: 114038256
+    sha512: qrdEmafT7pO5/8nIosZ/6QRhb3z/6EJDF9CCmAnjSPEtTV32U2wn0JUNiysBVx9nNlhMwkDmW5x3Tf/+ip2qwg==
+    size: 113844891
 path: Subscriptions-0.0.0-arm64-mac.zip
-sha512: D4fwbTwEMK84dY6Mm3gCbWm7DqBxKrpnRcZw98QZ5r+aOYbGXfPq5P2YAUv0MDDOJIKn5fnmLIhHELax9fZV6Q==
-releaseDate: '2026-03-28T20:18:29.179Z'
+sha512: hh/DFWl0ETPm5UBVtS1xZVQotzcFPN2RAI6eodTEu6H1ucK5cUp28ZKbJO6UwQWp2r2XYTwonG3gCenr0DxEzw==
+releaseDate: '2026-03-28T20:41:01.404Z'
