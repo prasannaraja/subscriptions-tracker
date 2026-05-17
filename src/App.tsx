@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Subscription, ToastMessage, Preset, SubscriptionForm } from "./types";
+import type { Subscription, ToastMessage, Preset, SubscriptionForm, Loan, LoanForm } from "./types";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
 import { EMPTY_FORM } from "./constants";
 import { setFilterCat, setSearchQ, setShowInactive, setSortBy } from "./features/filters/filtersSlice";
@@ -23,6 +23,9 @@ import {
 } from "./features/subscriptions/subscriptionsSelectors";
 import { saveSubscriptions } from "./features/subscriptions/subscriptionsPersistence";
 import { normalizeSubscriptions } from "./features/subscriptions/subscriptionsValidation";
+import { addLoan, deleteLoan, updateLoan, toggleLoanMonth, setCommitted, closeLoan } from "./features/loans/loansSlice";
+import { selectLoans, selectCommittedLoans, selectOtherCommitmentsMonthly } from "./features/loans/loansSelectors";
+import { saveLoans } from "./features/loans/loansPersistence";
 import { setBaseCurrency } from "./features/settings/settingsSlice";
 import { saveSettings } from "./features/settings/settingsPersistence";
 import { clearToast, showToast as showToastAction } from "./features/toast/toastSlice";
@@ -31,6 +34,8 @@ import { formatCurrency } from "./utils";
 import { Dashboard } from "./components/Dashboard";
 import { ListView } from "./components/ListView";
 import { AddEditView } from "./components/AddEditView";
+import { LoansView } from "./components/LoansView";
+import { AddEditLoanView } from "./components/AddEditLoanView";
 import { SettingsView } from "./components/SettingsView";
 import { styles } from "./styles/theme";
 
@@ -46,12 +51,25 @@ export default function App() {
   const filteredSubs = useAppSelector(selectFilteredSubscriptions);
   const { filterCat, searchQ, showInactive, sortBy } = useAppSelector((state) => state.filters);
   const toast = useAppSelector((state) => state.toast);
+  const loans = useAppSelector(selectLoans);
+  const committedLoans = useAppSelector(selectCommittedLoans);
+  const otherCommitmentsMonthly = useAppSelector(selectOtherCommitmentsMonthly);
 
-  const [view, setView] = useState("dashboard"); // dashboard | list | add | settings
+  const [view, setView] = useState("dashboard"); // dashboard | list | add | loans | addloan | settings
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<SubscriptionForm>(EMPTY_FORM);
 
+  const EMPTY_LOAN_FORM: LoanForm = {
+    name: "", totalAmount: 0, currency: baseCurrency,
+    receivedDate: new Date().toISOString().split("T")[0],
+    notes: "", color: "#FB923C", icon: "◎",
+    committed: false, planMonths: 12, history: {}, closed: false,
+  };
+  const [loanEditId, setLoanEditId] = useState<string | null>(null);
+  const [loanForm, setLoanForm] = useState<LoanForm>(EMPTY_LOAN_FORM);
+
   useEffect(() => { saveSubscriptions(subs); }, [subs]);
+  useEffect(() => { saveLoans(loans); }, [loans]);
   useEffect(() => { saveSettings({ baseCurrency }); }, [baseCurrency]);
 
   function showToast(msg: string, type: ToastMessage["type"] = "success") {
@@ -94,6 +112,39 @@ export default function App() {
     const sub = subs.find(s => s.id === id);
     dispatch(deleteSubscription(id));
     showToast(`${sub?.name} removed.`, "info");
+  }
+
+  function openAddLoan() {
+    setLoanForm({ ...EMPTY_LOAN_FORM, currency: baseCurrency });
+    setLoanEditId(null);
+    setView("addloan");
+  }
+
+  function openEditLoan(loan: Loan) {
+    setLoanForm({ ...loan });
+    setLoanEditId(loan.id);
+    setView("addloan");
+  }
+
+  function handleSaveLoan() {
+    if (!loanForm.name?.trim() || !loanForm.totalAmount || parseFloat(String(loanForm.totalAmount)) <= 0) {
+      showToast("Please fill name and a valid amount.", "error");
+      return;
+    }
+    if (loanEditId) {
+      dispatch(updateLoan({ id: loanEditId, form: loanForm }));
+      showToast(`${loanForm.name} updated!`);
+    } else {
+      dispatch(addLoan(loanForm));
+      showToast(`${loanForm.name} added!`);
+    }
+    setView("loans");
+  }
+
+  function handleDeleteLoan(id: string) {
+    const loan = loans.find((l) => l.id === id);
+    dispatch(deleteLoan(id));
+    showToast(`${loan?.name} removed.`, "info");
   }
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -161,11 +212,12 @@ export default function App() {
           {[
             { id: "dashboard", label: "Dashboard", icon: "⊞" },
             { id: "list", label: "Subscriptions", icon: "≡" },
+            { id: "loans", label: "Loans", icon: "⊕" },
             { id: "settings", label: "Settings", icon: "⚙" },
           ].map(item => (
             <button
               key={item.id}
-              style={{ ...styles.navBtn, ...(view === item.id || (view === "add" && item.id === "list") ? styles.navBtnActive : {}) }}
+              style={{ ...styles.navBtn, ...(view === item.id || (view === "add" && item.id === "list") || (view === "addloan" && item.id === "loans") ? styles.navBtnActive : {}) }}
               onClick={() => setView(item.id)}
             >
               <span style={styles.navIcon}>{item.icon}</span>
@@ -212,6 +264,9 @@ export default function App() {
             openAdd={openAdd}
             openEdit={openEdit}
             baseCurrency={baseCurrency}
+            committedLoans={committedLoans}
+            otherCommitmentsMonthly={otherCommitmentsMonthly}
+            onOpenLoans={() => setView("loans")}
           />
         )}
 
@@ -236,6 +291,29 @@ export default function App() {
             editId={editId}
             handleSave={handleSave}
             onCancel={() => setView("list")}
+          />
+        )}
+
+        {view === "loans" && (
+          <LoansView
+            loans={loans}
+            openAdd={openAddLoan}
+            openEdit={openEditLoan}
+            handleDelete={handleDeleteLoan}
+            toggleLoanMonth={(id, key) => dispatch(toggleLoanMonth({ id, monthKey: key }))}
+            handleStartPlan={(id, planMonths) => dispatch(setCommitted({ id, committed: true, planMonths }))}
+            handleClose={(id) => dispatch(closeLoan(id))}
+            baseCurrency={baseCurrency}
+          />
+        )}
+
+        {view === "addloan" && (
+          <AddEditLoanView
+            form={loanForm}
+            setForm={setLoanForm}
+            editId={loanEditId}
+            handleSave={handleSaveLoan}
+            onCancel={() => setView("loans")}
           />
         )}
 

@@ -1,7 +1,9 @@
-import type { Subscription, Preset } from '../types';
+import type { Subscription, Preset, Loan } from '../types';
 import { CATEGORIES, PRESETS } from '../constants';
 import { daysUntil, formatCurrency } from '../utils';
 import { styles } from '../styles/theme';
+
+const COMMITMENT_COLOR = "#FB923C";
 
 interface DashboardProps {
   subs: Subscription[];
@@ -13,6 +15,9 @@ interface DashboardProps {
   openAdd: (preset?: Preset) => void;
   openEdit: (sub: Subscription) => void;
   baseCurrency: string;
+  committedLoans: Loan[];
+  otherCommitmentsMonthly: number;
+  onOpenLoans: () => void;
 }
 
 export function Dashboard({
@@ -25,8 +30,11 @@ export function Dashboard({
   openAdd,
   openEdit,
   baseCurrency,
+  committedLoans,
+  otherCommitmentsMonthly,
+  onOpenLoans,
 }: DashboardProps) {
-  const maxCat = Math.max(...Object.values(byCategory), 0.01);
+  const maxCat = Math.max(...Object.values(byCategory), otherCommitmentsMonthly, 0.01);
 
   return (
     <div className="page-container">
@@ -49,6 +57,7 @@ export function Dashboard({
           { label: 'Yearly Spend', value: formatCurrency(yearlyTotal, baseCurrency), sub: 'per year', accent: '#60A5FA' },
           { label: 'Daily Spend', value: formatCurrency(monthlyTotal / 30, baseCurrency), sub: 'per day', accent: '#34D399' },
           { label: 'Subscriptions', value: activeSubs.length, sub: `${subs.length - activeSubs.length} paused`, accent: '#F59E0B' },
+          { label: 'Other Commitments', value: formatCurrency(otherCommitmentsMonthly, baseCurrency), sub: `${committedLoans.length} active plan${committedLoans.length !== 1 ? 's' : ''}`, accent: COMMITMENT_COLOR },
         ].map((card) => (
           <div key={card.label} style={styles.statCard}>
             <div style={{ ...styles.statAccent, background: card.accent }} />
@@ -79,7 +88,47 @@ export function Dashboard({
               </div>
             );
           })}
-          {monthlyTotal === 0 && <p style={styles.emptyText}>No active subscriptions yet.</p>}
+          {otherCommitmentsMonthly > 0 && (
+            <div style={styles.catRow}>
+              <div style={styles.catLeft}>
+                <span style={{ ...styles.catDot, background: COMMITMENT_COLOR }}>◎</span>
+                <span style={styles.catName}>Other Commitments</span>
+              </div>
+              <div style={styles.catBarWrap}>
+                <div style={{ ...styles.catBar, width: `${(otherCommitmentsMonthly / maxCat) * 100}%`, background: COMMITMENT_COLOR }} />
+              </div>
+              <span style={styles.catAmt}>{formatCurrency(otherCommitmentsMonthly, baseCurrency)}</span>
+            </div>
+          )}
+          {monthlyTotal === 0 && otherCommitmentsMonthly === 0 && <p style={styles.emptyText}>No active subscriptions yet.</p>}
+        </div>
+
+        {/* Loan Commitments */}
+        <div style={styles.card}>
+          <h2 style={styles.cardTitle}>Loan Commitments</h2>
+          {committedLoans.length === 0 && <p style={styles.emptyText}>No active loan plans.</p>}
+          {committedLoans.map((loan) => {
+            const monthly = loan.planMonths > 0 ? loan.totalAmount / loan.planMonths : 0;
+            const monthsSaved = Object.values(loan.history).filter(Boolean).length;
+            const progress = loan.planMonths > 0 ? Math.min(monthsSaved / loan.planMonths, 1) : 0;
+            return (
+              <div key={loan.id} style={styles.upcomingRow} onClick={onOpenLoans}>
+                <div style={{ ...styles.subIcon, background: loan.color || COMMITMENT_COLOR }}>{loan.icon || '◎'}</div>
+                <div style={styles.upcomingInfo}>
+                  <span style={styles.upcomingName}>{loan.name}</span>
+                  <div style={{ ...styles.catBarWrap, marginTop: 4 }}>
+                    <div style={{ ...styles.catBar, width: `${progress * 100}%`, background: COMMITMENT_COLOR }} />
+                  </div>
+                  <span style={styles.upcomingDate}>{monthsSaved}/{loan.planMonths} months saved</span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ ...styles.badge, background: COMMITMENT_COLOR + '22', color: COMMITMENT_COLOR }}>
+                    {formatCurrency(monthly, loan.currency)}/mo
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Upcoming */}

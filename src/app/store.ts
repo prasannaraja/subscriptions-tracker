@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import filtersReducer from "../features/filters/filtersSlice";
+import loansReducer from "../features/loans/loansSlice";
 import subscriptionsReducer from "../features/subscriptions/subscriptionsSlice";
 import settingsReducer from "../features/settings/settingsSlice";
 import toastReducer from "../features/toast/toastSlice";
@@ -7,6 +8,7 @@ import toastReducer from "../features/toast/toastSlice";
 export const store = configureStore({
   reducer: {
     filters: filtersReducer,
+    loans: loansReducer,
     subscriptions: subscriptionsReducer,
     settings: settingsReducer,
     toast: toastReducer,

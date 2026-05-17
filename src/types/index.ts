@@ -33,3 +33,20 @@ export interface ToastMessage {
   msg: string;
   type: "success" | "error" | "info";
 }
+
+export interface Loan {
+  id: string;
+  name: string;
+  totalAmount: number;
+  currency: string;
+  receivedDate: string;
+  notes: string;
+  color: string;
+  icon: string;
+  committed: boolean;
+  planMonths: number;
+  history: Record<string, boolean>;
+  closed: boolean;
+}
+
+export type LoanForm = Omit<Loan, "id">;
