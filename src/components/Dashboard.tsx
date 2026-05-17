@@ -1,6 +1,6 @@
 import type { Subscription, Preset, Loan } from '../types';
 import { CATEGORIES, PRESETS } from '../constants';
-import { daysUntil, formatCurrency } from '../utils';
+import { daysUntil, formatCurrency, formatCurrencyCode } from '../utils';
 import { styles } from '../styles/theme';
 
 const COMMITMENT_COLOR = "#FB923C";
@@ -16,7 +16,7 @@ interface DashboardProps {
   openEdit: (sub: Subscription) => void;
   baseCurrency: string;
   committedLoans: Loan[];
-  otherCommitmentsMonthly: number;
+  otherCommitmentsByCurrency: Record<string, number>;
   onOpenLoans: () => void;
 }
 
@@ -31,10 +31,10 @@ export function Dashboard({
   openEdit,
   baseCurrency,
   committedLoans,
-  otherCommitmentsMonthly,
+  otherCommitmentsByCurrency,
   onOpenLoans,
 }: DashboardProps) {
-  const maxCat = Math.max(...Object.values(byCategory), otherCommitmentsMonthly, 0.01);
+  const maxCat = Math.max(...Object.values(byCategory), 0.01);
 
   return (
     <div className="page-container">
@@ -57,13 +57,20 @@ export function Dashboard({
           { label: 'Yearly Spend', value: formatCurrency(yearlyTotal, baseCurrency), sub: 'per year', accent: '#60A5FA' },
           { label: 'Daily Spend', value: formatCurrency(monthlyTotal / 30, baseCurrency), sub: 'per day', accent: '#34D399' },
           { label: 'Subscriptions', value: activeSubs.length, sub: `${subs.length - activeSubs.length} paused`, accent: '#F59E0B' },
-          { label: 'Other Commitments', value: formatCurrency(otherCommitmentsMonthly, baseCurrency), sub: `${committedLoans.length} active plan${committedLoans.length !== 1 ? 's' : ''}`, accent: COMMITMENT_COLOR },
         ].map((card) => (
           <div key={card.label} style={styles.statCard}>
             <div style={{ ...styles.statAccent, background: card.accent }} />
             <div style={styles.statLabel}>{card.label}</div>
             <div style={{ ...styles.statValue, color: card.accent }}>{card.value}</div>
             <div style={styles.statSub}>{card.sub}</div>
+          </div>
+        ))}
+        {Object.entries(otherCommitmentsByCurrency).map(([currency, monthly]) => (
+          <div key={`commitment-${currency}`} style={styles.statCard}>
+            <div style={{ ...styles.statAccent, background: COMMITMENT_COLOR }} />
+            <div style={styles.statLabel}>Commitments · {currency}</div>
+            <div style={{ ...styles.statValue, color: COMMITMENT_COLOR }}>{formatCurrencyCode(monthly, currency)}</div>
+            <div style={styles.statSub}>per month</div>
           </div>
         ))}
       </div>
@@ -88,19 +95,19 @@ export function Dashboard({
               </div>
             );
           })}
-          {otherCommitmentsMonthly > 0 && (
-            <div style={styles.catRow}>
+          {Object.entries(otherCommitmentsByCurrency).map(([currency, monthly]) => (
+            <div key={`cat-commitment-${currency}`} style={styles.catRow}>
               <div style={styles.catLeft}>
                 <span style={{ ...styles.catDot, background: COMMITMENT_COLOR }}>◎</span>
-                <span style={styles.catName}>Other Commitments</span>
+                <span style={styles.catName}>Commitments ({currency})</span>
               </div>
               <div style={styles.catBarWrap}>
-                <div style={{ ...styles.catBar, width: `${(otherCommitmentsMonthly / maxCat) * 100}%`, background: COMMITMENT_COLOR }} />
+                <div style={{ ...styles.catBar, width: `${Math.min((monthly / maxCat) * 100, 100)}%`, background: COMMITMENT_COLOR }} />
               </div>
-              <span style={styles.catAmt}>{formatCurrency(otherCommitmentsMonthly, baseCurrency)}</span>
+              <span style={styles.catAmt}>{formatCurrencyCode(monthly, currency)}</span>
             </div>
-          )}
-          {monthlyTotal === 0 && otherCommitmentsMonthly === 0 && <p style={styles.emptyText}>No active subscriptions yet.</p>}
+          ))}
+          {monthlyTotal === 0 && Object.keys(otherCommitmentsByCurrency).length === 0 && <p style={styles.emptyText}>No active subscriptions yet.</p>}
         </div>
 
         {/* Loan Commitments */}
@@ -123,7 +130,7 @@ export function Dashboard({
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ ...styles.badge, background: COMMITMENT_COLOR + '22', color: COMMITMENT_COLOR }}>
-                    {formatCurrency(monthly, loan.currency)}/mo
+                    {formatCurrencyCode(monthly, loan.currency)}/mo
                   </div>
                 </div>
               </div>

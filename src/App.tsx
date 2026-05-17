@@ -24,7 +24,7 @@ import {
 import { saveSubscriptions } from "./features/subscriptions/subscriptionsPersistence";
 import { normalizeSubscriptions } from "./features/subscriptions/subscriptionsValidation";
 import { addLoan, deleteLoan, updateLoan, toggleLoanMonth, setCommitted, closeLoan } from "./features/loans/loansSlice";
-import { selectLoans, selectCommittedLoans, selectOtherCommitmentsMonthly } from "./features/loans/loansSelectors";
+import { selectLoans, selectCommittedLoans, selectOtherCommitmentsByCurrency } from "./features/loans/loansSelectors";
 import { saveLoans } from "./features/loans/loansPersistence";
 import { setBaseCurrency } from "./features/settings/settingsSlice";
 import { saveSettings } from "./features/settings/settingsPersistence";
@@ -53,7 +53,7 @@ export default function App() {
   const toast = useAppSelector((state) => state.toast);
   const loans = useAppSelector(selectLoans);
   const committedLoans = useAppSelector(selectCommittedLoans);
-  const otherCommitmentsMonthly = useAppSelector(selectOtherCommitmentsMonthly);
+  const otherCommitmentsByCurrency = useAppSelector(selectOtherCommitmentsByCurrency);
 
   const [view, setView] = useState("dashboard"); // dashboard | list | add | loans | addloan | settings
   const [editId, setEditId] = useState<string | null>(null);
@@ -265,7 +265,7 @@ export default function App() {
             openEdit={openEdit}
             baseCurrency={baseCurrency}
             committedLoans={committedLoans}
-            otherCommitmentsMonthly={otherCommitmentsMonthly}
+            otherCommitmentsByCurrency={otherCommitmentsByCurrency}
             onOpenLoans={() => setView("loans")}
           />
         )}

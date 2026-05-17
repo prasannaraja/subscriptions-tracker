@@ -39,7 +39,19 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
       currency: currency,
     }).format(amount);
   } catch {
-    return `$${amount.toFixed(2)}`;
+    return `${amount.toFixed(2)}`;
+  }
+}
+
+export function formatCurrencyCode(amount: number, currency: string = "USD"): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: currency,
+      currencyDisplay: "code",
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toFixed(2)}`;
   }
 }
 
