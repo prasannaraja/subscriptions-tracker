@@ -5,7 +5,7 @@ export const styles: Record<string, React.CSSProperties> = {
   sidebar: { background: "#0A0F1A" },
   logo: { display: "flex", alignItems: "center", gap: 10, padding: "0 20px 28px", borderBottom: "1px solid #1E293B" },
   logoIcon: { fontSize: 22, color: "#A78BFA" },
-  logoText: { fontFamily: "'Sora'", fontWeight: 700, fontSize: 17, letterSpacing: "0.05em", color: "#F1F5F9" },
+  logoText: { fontFamily: "'Sora'", fontWeight: 700, fontSize: 17, letterSpacing: "0.05em", color: "#F1F5F9", paddingTop: 2, display: "inline-block" },
   navItems: {}, // Handled by CSS
   navBtn: { display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 8, border: "none", background: "transparent", color: "#64748B", cursor: "pointer", fontSize: 13, fontFamily: "'Sora'", fontWeight: 500, width: "100%", textAlign: "left", transition: "all 0.15s" },
   navBtnActive: { background: "#A78BFA18", color: "#A78BFA" },
