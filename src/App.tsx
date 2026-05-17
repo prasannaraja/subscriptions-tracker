@@ -24,10 +24,12 @@ import {
 import { saveSubscriptions } from "./features/subscriptions/subscriptionsPersistence";
 import { normalizeSubscriptions } from "./features/subscriptions/subscriptionsValidation";
 import { clearToast, showToast as showToastAction } from "./features/toast/toastSlice";
+import seedSubscriptions from "./features/subscriptions/seedSubscriptions.json";
 import { formatCurrency } from "./utils";
 import { Dashboard } from "./components/Dashboard";
 import { ListView } from "./components/ListView";
 import { AddEditView } from "./components/AddEditView";
+import { SettingsView } from "./components/SettingsView";
 import { styles } from "./styles/theme";
 
 export default function App() {
@@ -43,7 +45,7 @@ export default function App() {
   const { filterCat, searchQ, showInactive, sortBy } = useAppSelector((state) => state.filters);
   const toast = useAppSelector((state) => state.toast);
 
-  const [view, setView] = useState("dashboard"); // dashboard | list | add | edit
+  const [view, setView] = useState("dashboard"); // dashboard | list | add | settings
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<SubscriptionForm>(EMPTY_FORM);
 
@@ -131,6 +133,19 @@ export default function App() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  function resetToSeedData() {
+    if (!window.confirm("Replace current subscriptions with the bundled sample data?")) return;
+
+    const subscriptions = normalizeSubscriptions(seedSubscriptions);
+    if (!subscriptions) {
+      showToast("Seed data is invalid.", "error");
+      return;
+    }
+
+    dispatch(importSubscriptions(subscriptions));
+    showToast("Sample data restored.", "info");
+  }
+
   return (
     <div className="layout-root" style={styles.root}>
       {/* Sidebar */}
@@ -143,6 +158,7 @@ export default function App() {
           {[
             { id: "dashboard", label: "Dashboard", icon: "⊞" },
             { id: "list", label: "Subscriptions", icon: "≡" },
+            { id: "settings", label: "Settings", icon: "⚙" },
           ].map(item => (
             <button
               key={item.id}
@@ -217,6 +233,20 @@ export default function App() {
             editId={editId}
             handleSave={handleSave}
             onCancel={() => setView("list")}
+          />
+        )}
+
+        {view === "settings" && (
+          <SettingsView
+            activeCount={activeSubs.length}
+            baseCurrency={baseCurrency}
+            exportData={exportData}
+            importData={() => fileInputRef.current?.click()}
+            monthlyTotal={monthlyTotal}
+            pausedCount={subs.length - activeSubs.length}
+            resetToSeedData={resetToSeedData}
+            subscriptions={subs}
+            yearlyTotal={yearlyTotal}
           />
         )}
       </main>
