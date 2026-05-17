@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
 
 function createWindow() {
@@ -9,17 +9,26 @@ function createWindow() {
     minHeight: 600,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.cjs'),
     }
   });
 
-  // Check if we are in dev mode by looking at an env var (which we'll inject via scripts if needed)
-  // For the compiled release, we just explicitly load the built index.html from dist
   win.loadFile(path.join(__dirname, '../dist/index.html'));
-  
-  // Optionally open DevTools
-  // win.webContents.openDevTools()
+
+  // Open all target="_blank" links in the system browser, never in a new Electron window
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
+
+  // Prevent the renderer from navigating away from the loaded app file
+  win.webContents.on('will-navigate', (event, url) => {
+    if (url !== win.webContents.getURL()) {
+      event.preventDefault();
+    }
+  });
 }
 
 app.whenReady().then(() => {
