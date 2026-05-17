@@ -12,6 +12,8 @@ export interface Subscription {
   active: boolean;
   url?: string;
   history?: Record<string, boolean>;
+  contractEndDate?: string;
+  cancellationNote?: string;
 }
 
 export type SubscriptionForm = Omit<Subscription, "id">;

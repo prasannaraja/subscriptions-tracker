@@ -62,6 +62,8 @@ export function normalizeSubscription(value: unknown): Subscription | null {
     active: typeof value.active === "boolean" ? value.active : true,
     url: typeof value.url === "string" ? value.url : "",
     history: normalizeHistory(value.history),
+    contractEndDate: isValidDate(value.contractEndDate) ? value.contractEndDate as string : undefined,
+    cancellationNote: typeof value.cancellationNote === "string" ? value.cancellationNote : undefined,
   };
 }
 

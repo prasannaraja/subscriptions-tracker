@@ -98,6 +98,9 @@ export function ListView({
           const days = daysUntil(nextDate);
           const monthly = toMonthly(parseFloat(String(s.amount)) || 0, s.cycle);
           const cat = CATEGORIES[s.category] || CATEGORIES.other;
+          const isContract = !!s.contractEndDate;
+          const daysToExpiry = isContract ? daysUntil(s.contractEndDate!) : null;
+          const expiringSOon = daysToExpiry !== null && daysToExpiry <= 30;
 
           return (
             <div key={s.id} style={{ ...styles.subRow, opacity: s.active ? 1 : 0.5 }} className="sub-row-hover">
@@ -123,11 +126,21 @@ export function ListView({
                   <span style={{ ...styles.catChip, background: cat.color + '22', color: cat.color }}>
                     {cat.label}
                   </span>
+                  {isContract && (
+                    <span style={{ ...styles.catChip, background: expiringSOon ? '#EF444422' : '#1E293B', color: expiringSOon ? '#EF4444' : '#64748B', marginLeft: 4 }}>
+                      CONTRACT{expiringSOon ? ` · ${daysToExpiry}d left` : ''}
+                    </span>
+                  )}
                   <span style={styles.metaSep}>·</span>
                   <span style={styles.metaText}>
-                    Renews {nextDate} ({days}d)
+                    {isContract ? `Expires ${s.contractEndDate}` : `Renews ${nextDate}`} ({isContract ? `${daysToExpiry}d` : `${days}d`})
                   </span>
                 </div>
+                {isContract && s.cancellationNote && (
+                  <div style={{ fontSize: 11, color: '#475569', marginTop: 3, fontStyle: 'italic' }}>
+                    ⚠ {s.cancellationNote}
+                  </div>
+                )}
                 
                 {/* Year Tracker Grid */}
                 {s.active && (

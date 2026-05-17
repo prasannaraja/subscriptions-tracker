@@ -203,8 +203,11 @@ export function Dashboard({
           <h2 style={styles.cardTitle}>Upcoming Renewals</h2>
           {upcoming.length === 0 && <p style={styles.emptyText}>No subscriptions yet.</p>}
           {upcoming.map((s) => {
-            const days = daysUntil(s.nextDate);
+            const isContract = !!s.contractEndDate;
+            const displayDate = isContract ? s.contractEndDate! : s.nextDate;
+            const days = daysUntil(displayDate);
             const urgent = days <= 3;
+            const expiringSOon = isContract && days <= 30;
             return (
               <div key={s.id} style={styles.upcomingRow} onClick={() => openEdit(s)}>
                 <div style={{ ...styles.subIcon, background: s.color || '#A78BFA' }}>{s.icon || '◎'}</div>
@@ -226,17 +229,17 @@ export function Dashboard({
                       s.name
                     )}
                   </span>
-                  <span style={styles.upcomingDate}>{s.nextDate}</span>
+                  <span style={styles.upcomingDate}>
+                    {isContract ? `Contract expires ${displayDate}` : displayDate}
+                  </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div
-                    style={{
-                      ...styles.badge,
-                      background: urgent ? '#EF444422' : '#1E293B',
-                      color: urgent ? '#EF4444' : '#94A3B8',
-                    }}
-                  >
-                    {days === 0 ? 'Today!' : days === 1 ? 'Tomorrow' : `${days}d`}
+                  <div style={{
+                    ...styles.badge,
+                    background: (urgent || expiringSOon) ? '#EF444422' : '#1E293B',
+                    color: (urgent || expiringSOon) ? '#EF4444' : '#94A3B8',
+                  }}>
+                    {isContract ? `Expires ${days}d` : (days === 0 ? 'Today!' : days === 1 ? 'Tomorrow' : `${days}d`)}
                   </div>
                   <div style={styles.upcomingAmt}>{formatCurrency(parseFloat(String(s.amount)), s.currency)}</div>
                 </div>

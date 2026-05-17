@@ -12,7 +12,7 @@ interface AddEditViewProps {
 }
 
 export function AddEditView({ form, setForm, editId, handleSave, onCancel }: AddEditViewProps) {
-  function set(key: keyof SubscriptionForm, val: string | number) {
+  function set(key: keyof SubscriptionForm, val: string | number | undefined) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
@@ -150,6 +150,30 @@ export function AddEditView({ form, setForm, editId, handleSave, onCancel }: Add
             onChange={(e) => set('notes', e.target.value)}
             placeholder="Optional notes..."
           />
+        </div>
+
+        {/* Contract section */}
+        <div style={{ borderTop: '1px solid #1E293B', paddingTop: 16, marginTop: 4 }}>
+          <div style={styles.formRow}>
+            <label style={styles.label}>Contract End Date <span style={{ color: '#475569', fontWeight: 400 }}>(leave blank if not a contract)</span></label>
+            <input
+              style={styles.input}
+              type="date"
+              value={form.contractEndDate || ''}
+              onChange={(e) => set('contractEndDate', e.target.value)}
+            />
+          </div>
+          {form.contractEndDate && (
+            <div style={styles.formRow}>
+              <label style={styles.label}>Cancellation / Notice Terms</label>
+              <input
+                style={styles.input}
+                value={form.cancellationNote || ''}
+                onChange={(e) => set('cancellationNote', e.target.value)}
+                placeholder="e.g. 30-day notice required, €50 exit fee"
+              />
+            </div>
+          )}
         </div>
 
         {form.amount && !isNaN(parseFloat(String(form.amount))) && (
