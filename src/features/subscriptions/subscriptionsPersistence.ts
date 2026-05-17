@@ -1,14 +1,19 @@
 import type { Subscription } from "../../types";
 import seedSubscriptions from "./seedSubscriptions.json";
+import { normalizeSubscriptions } from "./subscriptionsValidation";
 
 const STORAGE_KEY = "_subs_v1";
+const normalizedSeedSubscriptions = normalizeSubscriptions(seedSubscriptions) ?? [];
 
 export function loadSubscriptions(): Subscription[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : seedSubscriptions;
+    if (!raw) return normalizedSeedSubscriptions;
+
+    const subscriptions = normalizeSubscriptions(JSON.parse(raw));
+    return subscriptions ?? normalizedSeedSubscriptions;
   } catch {
-    return seedSubscriptions;
+    return normalizedSeedSubscriptions;
   }
 }
 

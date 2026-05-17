@@ -22,6 +22,7 @@ import {
   selectYearlyTotal,
 } from "./features/subscriptions/subscriptionsSelectors";
 import { saveSubscriptions } from "./features/subscriptions/subscriptionsPersistence";
+import { normalizeSubscriptions } from "./features/subscriptions/subscriptionsValidation";
 import { clearToast, showToast as showToastAction } from "./features/toast/toastSlice";
 import { formatCurrency } from "./utils";
 import { Dashboard } from "./components/Dashboard";
@@ -115,8 +116,9 @@ export default function App() {
       try {
         const content = e.target?.result as string;
         const parsed = JSON.parse(content);
-        if (Array.isArray(parsed)) {
-          dispatch(importSubscriptions(parsed));
+        const subscriptions = normalizeSubscriptions(parsed);
+        if (subscriptions) {
+          dispatch(importSubscriptions(subscriptions));
           showToast("Data imported successfully!");
         } else {
           showToast("Invalid data format.", "error");
