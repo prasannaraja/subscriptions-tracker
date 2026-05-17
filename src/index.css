@@ -90,6 +90,12 @@ input[type=date]::-webkit-calendar-picker-indicator {
   gap: 14px;
 }
 
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
 .sidebar-footer {
   padding: 20px 20px 0;
   border-top: 1px solid #1E293B;
@@ -144,7 +150,7 @@ input[type=date]::-webkit-calendar-picker-indicator {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .grid-2-col, .grid-form {
+  .grid-2-col, .grid-form, .settings-grid {
     grid-template-columns: 1fr;
   }
 }

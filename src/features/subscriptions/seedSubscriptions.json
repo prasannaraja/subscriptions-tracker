@@ -1,1 +1,95 @@
-[]
+[
+  {
+    "id": "seed-netflix",
+    "name": "Netflix",
+    "amount": 15.49,
+    "currency": "USD",
+    "cycle": "monthly",
+    "category": "streaming",
+    "startDate": "2026-01-05",
+    "notes": "Standard entertainment subscription.",
+    "color": "#E50914",
+    "icon": "N",
+    "active": true,
+    "url": "https://www.netflix.com/account",
+    "history": {
+      "2026-01": true,
+      "2026-02": true,
+      "2026-03": true,
+      "2026-04": true
+    }
+  },
+  {
+    "id": "seed-spotify",
+    "name": "Spotify",
+    "amount": 10.99,
+    "currency": "USD",
+    "cycle": "monthly",
+    "category": "streaming",
+    "startDate": "2026-01-12",
+    "notes": "Individual music plan.",
+    "color": "#1DB954",
+    "icon": "♪",
+    "active": true,
+    "url": "https://www.spotify.com/account",
+    "history": {
+      "2026-01": true,
+      "2026-02": true,
+      "2026-03": true
+    }
+  },
+  {
+    "id": "seed-chatgpt",
+    "name": "ChatGPT Plus",
+    "amount": 20,
+    "currency": "USD",
+    "cycle": "monthly",
+    "category": "ai",
+    "startDate": "2026-02-01",
+    "notes": "AI productivity subscription.",
+    "color": "#10A37F",
+    "icon": "◎",
+    "active": true,
+    "url": "https://chatgpt.com",
+    "history": {
+      "2026-02": true,
+      "2026-03": true,
+      "2026-04": true
+    }
+  },
+  {
+    "id": "seed-github-copilot",
+    "name": "GitHub Copilot",
+    "amount": 100,
+    "currency": "USD",
+    "cycle": "yearly",
+    "category": "software",
+    "startDate": "2026-03-15",
+    "notes": "Annual developer tooling subscription.",
+    "color": "#6E40C9",
+    "icon": "⌥",
+    "active": true,
+    "url": "https://github.com/settings/copilot",
+    "history": {
+      "2026-03": true
+    }
+  },
+  {
+    "id": "seed-icloud",
+    "name": "iCloud+",
+    "amount": 2.99,
+    "currency": "USD",
+    "cycle": "monthly",
+    "category": "utilities",
+    "startDate": "2026-01-20",
+    "notes": "Cloud storage plan.",
+    "color": "#147EFB",
+    "icon": "☁",
+    "active": false,
+    "url": "https://www.icloud.com",
+    "history": {
+      "2026-01": true,
+      "2026-02": true
+    }
+  }
+]

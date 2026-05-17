@@ -79,4 +79,11 @@ export const styles: Record<string, React.CSSProperties> = {
   input: { width: "100%", padding: "10px 14px", background: "#080C14", border: "1px solid #1E293B", borderRadius: 8, color: "#E2E8F0", fontSize: 13, fontFamily: "'Sora'", outline: "none" },
   calcPreview: { background: "#A78BFA18", border: "1px solid #A78BFA33", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#A78BFA", marginBottom: 16, fontFamily: "'DM Mono'" },
   formActions: { display: "flex", gap: 10, justifyContent: "flex-end" },
+  settingActions: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 },
+  settingBadge: { padding: "4px 9px", borderRadius: 20, background: "#10B98122", color: "#10B981", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" },
+  settingDescription: { fontSize: 12, color: "#64748B", lineHeight: 1.6 },
+  settingMetric: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #1E293B" },
+  settingRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 0", borderBottom: "1px solid #1E293B" },
+  settingTitle: { fontSize: 13, fontWeight: 600, color: "#E2E8F0", marginBottom: 3 },
+  settingValue: { fontSize: 14, fontFamily: "'DM Mono'", fontWeight: 500, color: "#E2E8F0" },
 };
