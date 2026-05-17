@@ -23,6 +23,8 @@ import {
 } from "./features/subscriptions/subscriptionsSelectors";
 import { saveSubscriptions } from "./features/subscriptions/subscriptionsPersistence";
 import { normalizeSubscriptions } from "./features/subscriptions/subscriptionsValidation";
+import { setBaseCurrency } from "./features/settings/settingsSlice";
+import { saveSettings } from "./features/settings/settingsPersistence";
 import { clearToast, showToast as showToastAction } from "./features/toast/toastSlice";
 import seedSubscriptions from "./features/subscriptions/seedSubscriptions.json";
 import { formatCurrency } from "./utils";
@@ -50,6 +52,7 @@ export default function App() {
   const [form, setForm] = useState<SubscriptionForm>(EMPTY_FORM);
 
   useEffect(() => { saveSubscriptions(subs); }, [subs]);
+  useEffect(() => { saveSettings({ baseCurrency }); }, [baseCurrency]);
 
   function showToast(msg: string, type: ToastMessage["type"] = "success") {
     dispatch(showToastAction({ msg, type }));
@@ -58,9 +61,9 @@ export default function App() {
 
   function openAdd(preset: Preset | null = null) {
     if (preset) {
-      setForm({ ...EMPTY_FORM, name: preset.name, category: preset.category, color: preset.color, icon: preset.icon });
+      setForm({ ...EMPTY_FORM, currency: baseCurrency, name: preset.name, category: preset.category, color: preset.color, icon: preset.icon });
     } else {
-      setForm(EMPTY_FORM);
+      setForm({ ...EMPTY_FORM, currency: baseCurrency });
     }
     setEditId(null);
     setView("add");
@@ -243,6 +246,7 @@ export default function App() {
             exportData={exportData}
             importData={() => fileInputRef.current?.click()}
             monthlyTotal={monthlyTotal}
+            onBaseCurrencyChange={(c) => dispatch(setBaseCurrency(c))}
             pausedCount={subs.length - activeSubs.length}
             resetToSeedData={resetToSeedData}
             subscriptions={subs}

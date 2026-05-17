@@ -45,10 +45,7 @@ export const selectUpcomingRenewals = createSelector(
       .slice(0, 5),
 );
 
-export const selectBaseCurrency = createSelector(
-  [selectActiveSubscriptions],
-  (activeSubscriptions) => activeSubscriptions[0]?.currency || "USD",
-);
+export const selectBaseCurrency = (state: RootState) => state.settings.baseCurrency;
 
 export const selectFilteredSubscriptions = createSelector(
   [selectSubscriptions, selectActiveSubscriptions, selectFilters],

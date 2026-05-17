@@ -9,7 +9,7 @@ export const CATEGORIES: Record<string, Category> = {
   other: { label: "Other", icon: "◉", color: "#94A3B8" },
 };
 
-export const CURRENCIES = ["USD", "EUR", "GBP", "CHF", "CAD", "AUD"];
+export const CURRENCIES = ["USD", "EUR", "GBP", "INR", "CAD", "AUD", "CHF", "JPY", "SGD", "NZD"];
 
 export const PRESETS: Preset[] = [
   { name: "Netflix", category: "streaming", color: "#E50914", icon: "N" },

@@ -16,6 +16,22 @@ export function toMonthly(amount: number, cycle: string): number {
   return amount;
 }
 
+const LOCALE_CURRENCY_MAP: Record<string, string> = {
+  "en-IN": "INR", "hi": "INR", "hi-IN": "INR",
+  "en-GB": "GBP",
+  "en-CA": "CAD",
+  "en-AU": "AUD", "en-NZ": "NZD",
+  "en-SG": "SGD",
+  "de": "EUR", "fr": "EUR", "it": "EUR", "es": "EUR", "nl": "EUR", "pt-PT": "EUR",
+  "de-CH": "CHF", "fr-CH": "CHF", "it-CH": "CHF",
+  "ja": "JPY", "ja-JP": "JPY",
+};
+
+export function detectLocaleCurrency(): string {
+  const locale = navigator.language || "en-US";
+  return LOCALE_CURRENCY_MAP[locale] ?? LOCALE_CURRENCY_MAP[locale.split("-")[0]] ?? "USD";
+}
+
 export function formatCurrency(amount: number, currency: string = "USD"): string {
   try {
     return new Intl.NumberFormat(undefined, {

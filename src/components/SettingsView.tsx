@@ -1,5 +1,6 @@
 import type { Subscription } from "../types";
 import { formatCurrency } from "../utils";
+import { CURRENCIES } from "../constants";
 import { styles } from "../styles/theme";
 
 interface SettingsViewProps {
@@ -8,6 +9,7 @@ interface SettingsViewProps {
   exportData: () => void;
   importData: () => void;
   monthlyTotal: number;
+  onBaseCurrencyChange: (currency: string) => void;
   pausedCount: number;
   resetToSeedData: () => void;
   subscriptions: Subscription[];
@@ -20,6 +22,7 @@ export function SettingsView({
   exportData,
   importData,
   monthlyTotal,
+  onBaseCurrencyChange,
   pausedCount,
   resetToSeedData,
   subscriptions,
@@ -71,7 +74,15 @@ export function SettingsView({
           </div>
           <div style={styles.settingMetric}>
             <span style={styles.settingDescription}>Base currency</span>
-            <strong style={styles.settingValue}>{baseCurrency}</strong>
+            <select
+              style={{ ...styles.select, width: "auto", padding: "4px 8px" }}
+              value={baseCurrency}
+              onChange={(e) => onBaseCurrencyChange(e.target.value)}
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
         </div>
 
