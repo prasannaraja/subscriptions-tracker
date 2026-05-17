@@ -9,7 +9,7 @@ export const CATEGORIES: Record<string, Category> = {
   other: { label: "Other", icon: "◉", color: "#94A3B8" },
 };
 
-export const CURRENCIES = ["USD", "EUR", "GBP", "CHF", "CAD", "AUD"];
+export const CURRENCIES = ["USD", "EUR", "GBP", "INR", "CAD", "AUD", "CHF", "JPY", "SGD", "NZD"];
 
 export const PRESETS: Preset[] = [
   { name: "Netflix", category: "streaming", color: "#E50914", icon: "N" },
@@ -25,6 +25,20 @@ export const PRESETS: Preset[] = [
 ];
 
 export const BILLING_CYCLES = ["monthly", "yearly", "weekly"];
+
+export const EMPTY_FAMILY_FORM = {
+  type: "recurring" as "recurring" | "onetime",
+  name: "",
+  amount: 0,
+  currency: "EUR",
+  cycle: "monthly",
+  targetDate: "",
+  notes: "",
+  color: "#EC4899",
+  icon: "♡",
+  active: true,
+  history: {} as Record<string, boolean>,
+};
 
 export const EMPTY_FORM = {
   name: "",
