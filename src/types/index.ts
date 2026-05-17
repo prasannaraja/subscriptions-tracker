@@ -50,3 +50,20 @@ export interface Loan {
 }
 
 export type LoanForm = Omit<Loan, "id">;
+
+export interface FamilyCommitment {
+  id: string;
+  name: string;
+  type: "recurring" | "onetime";
+  amount: number;
+  currency: string;
+  cycle: string;
+  targetDate: string;
+  notes: string;
+  color: string;
+  icon: string;
+  active: boolean;
+  history: Record<string, boolean>;
+}
+
+export type FamilyCommitmentForm = Omit<FamilyCommitment, "id">;

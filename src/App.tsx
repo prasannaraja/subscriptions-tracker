@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Subscription, ToastMessage, Preset, SubscriptionForm, Loan, LoanForm } from "./types";
+import type { Subscription, ToastMessage, Preset, SubscriptionForm, Loan, LoanForm, FamilyCommitment, FamilyCommitmentForm } from "./types";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
 import { EMPTY_FORM } from "./constants";
 import { setFilterCat, setSearchQ, setShowInactive, setSortBy } from "./features/filters/filtersSlice";
@@ -23,6 +23,9 @@ import {
 } from "./features/subscriptions/subscriptionsSelectors";
 import { saveSubscriptions } from "./features/subscriptions/subscriptionsPersistence";
 import { normalizeSubscriptions } from "./features/subscriptions/subscriptionsValidation";
+import { addFamilyItem, deleteFamilyItem, updateFamilyItem, toggleFamilyMonth, toggleFamilyActive } from "./features/family/familySlice";
+import { selectFamily, selectPendingOnetime, selectFamilyMonthlyByCurrency } from "./features/family/familySelectors";
+import { saveFamily } from "./features/family/familyPersistence";
 import { addLoan, deleteLoan, updateLoan, toggleLoanMonth, setCommitted, closeLoan } from "./features/loans/loansSlice";
 import { selectLoans, selectCommittedLoans, selectOtherCommitmentsByCurrency } from "./features/loans/loansSelectors";
 import { saveLoans } from "./features/loans/loansPersistence";
@@ -34,6 +37,8 @@ import { formatCurrency } from "./utils";
 import { Dashboard } from "./components/Dashboard";
 import { ListView } from "./components/ListView";
 import { AddEditView } from "./components/AddEditView";
+import { FamilyView } from "./components/FamilyView";
+import { AddEditFamilyView } from "./components/AddEditFamilyView";
 import { LoansView } from "./components/LoansView";
 import { AddEditLoanView } from "./components/AddEditLoanView";
 import { SettingsView } from "./components/SettingsView";
@@ -51,13 +56,24 @@ export default function App() {
   const filteredSubs = useAppSelector(selectFilteredSubscriptions);
   const { filterCat, searchQ, showInactive, sortBy } = useAppSelector((state) => state.filters);
   const toast = useAppSelector((state) => state.toast);
+  const family = useAppSelector(selectFamily);
+  const pendingOnetime = useAppSelector(selectPendingOnetime);
+  const familyMonthlyByCurrency = useAppSelector(selectFamilyMonthlyByCurrency);
   const loans = useAppSelector(selectLoans);
   const committedLoans = useAppSelector(selectCommittedLoans);
   const otherCommitmentsByCurrency = useAppSelector(selectOtherCommitmentsByCurrency);
 
-  const [view, setView] = useState("dashboard"); // dashboard | list | add | loans | addloan | settings
+  const [view, setView] = useState("dashboard"); // dashboard | list | add | family | addfamily | loans | addloan | settings
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<SubscriptionForm>(EMPTY_FORM);
+
+  const EMPTY_FAMILY: FamilyCommitmentForm = {
+    type: "recurring", name: "", amount: 0, currency: baseCurrency,
+    cycle: "monthly", targetDate: "", notes: "",
+    color: "#EC4899", icon: "♡", active: true, history: {},
+  };
+  const [familyEditId, setFamilyEditId] = useState<string | null>(null);
+  const [familyForm, setFamilyForm] = useState<FamilyCommitmentForm>(EMPTY_FAMILY);
 
   const EMPTY_LOAN_FORM: LoanForm = {
     name: "", totalAmount: 0, currency: baseCurrency,
@@ -69,6 +85,7 @@ export default function App() {
   const [loanForm, setLoanForm] = useState<LoanForm>(EMPTY_LOAN_FORM);
 
   useEffect(() => { saveSubscriptions(subs); }, [subs]);
+  useEffect(() => { saveFamily(family); }, [family]);
   useEffect(() => { saveLoans(loans); }, [loans]);
   useEffect(() => { saveSettings({ baseCurrency }); }, [baseCurrency]);
 
@@ -112,6 +129,39 @@ export default function App() {
     const sub = subs.find(s => s.id === id);
     dispatch(deleteSubscription(id));
     showToast(`${sub?.name} removed.`, "info");
+  }
+
+  function openAddFamily() {
+    setFamilyForm({ ...EMPTY_FAMILY, currency: baseCurrency });
+    setFamilyEditId(null);
+    setView("addfamily");
+  }
+
+  function openEditFamily(item: FamilyCommitment) {
+    setFamilyForm({ ...item });
+    setFamilyEditId(item.id);
+    setView("addfamily");
+  }
+
+  function handleSaveFamily() {
+    if (!familyForm.name?.trim() || !familyForm.amount || parseFloat(String(familyForm.amount)) <= 0) {
+      showToast("Please fill name and a valid amount.", "error");
+      return;
+    }
+    if (familyEditId) {
+      dispatch(updateFamilyItem({ id: familyEditId, form: familyForm }));
+      showToast(`${familyForm.name} updated!`);
+    } else {
+      dispatch(addFamilyItem(familyForm));
+      showToast(`${familyForm.name} added!`);
+    }
+    setView("family");
+  }
+
+  function handleDeleteFamily(id: string) {
+    const item = family.find((i) => i.id === id);
+    dispatch(deleteFamilyItem(id));
+    showToast(`${item?.name} removed.`, "info");
   }
 
   function openAddLoan() {
@@ -212,12 +262,13 @@ export default function App() {
           {[
             { id: "dashboard", label: "Dashboard", icon: "⊞" },
             { id: "list", label: "Subscriptions", icon: "≡" },
+            { id: "family", label: "Family", icon: "♡" },
             { id: "loans", label: "Loans", icon: "⊕" },
             { id: "settings", label: "Settings", icon: "⚙" },
           ].map(item => (
             <button
               key={item.id}
-              style={{ ...styles.navBtn, ...(view === item.id || (view === "add" && item.id === "list") || (view === "addloan" && item.id === "loans") ? styles.navBtnActive : {}) }}
+              style={{ ...styles.navBtn, ...(view === item.id || (view === "add" && item.id === "list") || (view === "addfamily" && item.id === "family") || (view === "addloan" && item.id === "loans") ? styles.navBtnActive : {}) }}
               onClick={() => setView(item.id)}
             >
               <span style={styles.navIcon}>{item.icon}</span>
@@ -267,6 +318,9 @@ export default function App() {
             committedLoans={committedLoans}
             otherCommitmentsByCurrency={otherCommitmentsByCurrency}
             onOpenLoans={() => setView("loans")}
+            familyMonthlyByCurrency={familyMonthlyByCurrency}
+            pendingOnetime={pendingOnetime}
+            onOpenFamily={() => setView("family")}
           />
         )}
 
@@ -291,6 +345,28 @@ export default function App() {
             editId={editId}
             handleSave={handleSave}
             onCancel={() => setView("list")}
+          />
+        )}
+
+        {view === "family" && (
+          <FamilyView
+            items={family}
+            openAdd={openAddFamily}
+            openEdit={openEditFamily}
+            handleDelete={handleDeleteFamily}
+            toggleFamilyMonth={(id, key) => dispatch(toggleFamilyMonth({ id, monthKey: key }))}
+            toggleFamilyActive={(id) => dispatch(toggleFamilyActive(id))}
+            baseCurrency={baseCurrency}
+          />
+        )}
+
+        {view === "addfamily" && (
+          <AddEditFamilyView
+            form={familyForm}
+            setForm={setFamilyForm}
+            editId={familyEditId}
+            handleSave={handleSaveFamily}
+            onCancel={() => setView("family")}
           />
         )}
 
