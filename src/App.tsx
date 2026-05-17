@@ -1,28 +1,56 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Subscription, ToastMessage, Preset, SubscriptionForm } from "./types";
+import { useAppDispatch, useAppSelector } from "./app/hooks";
 import { EMPTY_FORM } from "./constants";
-import { generateId, toMonthly, getNextBillingDate, loadSubs, saveSubs, formatCurrency } from "./utils";
+import { setFilterCat, setSearchQ, setShowInactive, setSortBy } from "./features/filters/filtersSlice";
+import {
+  addSubscription,
+  deleteSubscription,
+  importSubscriptions,
+  toggleActive,
+  toggleMonth,
+  updateSubscription,
+} from "./features/subscriptions/subscriptionsSlice";
+import {
+  selectActiveSubscriptions,
+  selectBaseCurrency,
+  selectFilteredSubscriptions,
+  selectMonthlyTotal,
+  selectSubscriptions,
+  selectSubscriptionsByCategory,
+  selectUpcomingRenewals,
+  selectYearlyTotal,
+} from "./features/subscriptions/subscriptionsSelectors";
+import { saveSubscriptions } from "./features/subscriptions/subscriptionsPersistence";
+import { clearToast, showToast as showToastAction } from "./features/toast/toastSlice";
+import { formatCurrency } from "./utils";
 import { Dashboard } from "./components/Dashboard";
 import { ListView } from "./components/ListView";
 import { AddEditView } from "./components/AddEditView";
 import { styles } from "./styles/theme";
 
 export default function App() {
-  const [subs, setSubs] = useState<Subscription[]>(loadSubs);
+  const dispatch = useAppDispatch();
+  const subs = useAppSelector(selectSubscriptions);
+  const activeSubs = useAppSelector(selectActiveSubscriptions);
+  const monthlyTotal = useAppSelector(selectMonthlyTotal);
+  const yearlyTotal = useAppSelector(selectYearlyTotal);
+  const byCategory = useAppSelector(selectSubscriptionsByCategory);
+  const upcoming = useAppSelector(selectUpcomingRenewals);
+  const baseCurrency = useAppSelector(selectBaseCurrency);
+  const filteredSubs = useAppSelector(selectFilteredSubscriptions);
+  const { filterCat, searchQ, showInactive, sortBy } = useAppSelector((state) => state.filters);
+  const toast = useAppSelector((state) => state.toast);
+
   const [view, setView] = useState("dashboard"); // dashboard | list | add | edit
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<SubscriptionForm>(EMPTY_FORM);
-  const [filterCat, setFilterCat] = useState("all");
-  const [sortBy, setSortBy] = useState("name");
-  const [searchQ, setSearchQ] = useState("");
-  const [showInactive, setShowInactive] = useState(false);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
 
-  useEffect(() => { saveSubs(subs); }, [subs]);
+  useEffect(() => { saveSubscriptions(subs); }, [subs]);
 
   function showToast(msg: string, type: ToastMessage["type"] = "success") {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 2800);
+    dispatch(showToastAction({ msg, type }));
+    setTimeout(() => dispatch(clearToast()), 2800);
   }
 
   function openAdd(preset: Preset | null = null) {
@@ -47,10 +75,10 @@ export default function App() {
       return;
     }
     if (editId) {
-      setSubs(s => s.map(x => x.id === editId ? { ...(form as Subscription), id: editId } : x));
+      dispatch(updateSubscription({ id: editId, form }));
       showToast(`${form.name} updated!`);
     } else {
-      setSubs(s => [...s, { ...(form as Subscription), id: generateId(), amount: parseFloat(String(form.amount)) }]);
+      dispatch(addSubscription(form));
       showToast(`${form.name} added!`);
     }
     setView("list");
@@ -58,62 +86,9 @@ export default function App() {
 
   function handleDelete(id: string) {
     const sub = subs.find(s => s.id === id);
-    setSubs(s => s.filter(x => x.id !== id));
+    dispatch(deleteSubscription(id));
     showToast(`${sub?.name} removed.`, "info");
   }
-
-  function toggleActive(id: string) {
-    setSubs(s => s.map(x => x.id === id ? { ...x, active: !x.active } : x));
-  }
-
-  function toggleMonth(id: string, monthKey: string) {
-    setSubs(s => s.map(x => {
-      if (x.id !== id) return x;
-      const isCurrentlyTracked = x.history?.[monthKey] ?? false;
-      return { ...x, history: { ...x.history, [monthKey]: !isCurrentlyTracked } };
-    }));
-  }
-
-  const activeSubs = useMemo(() => subs.filter(s => s.active), [subs]);
-
-  const monthlyTotal = useMemo(() =>
-    activeSubs.reduce((sum, s) => sum + toMonthly(parseFloat(String(s.amount)) || 0, s.cycle), 0),
-    [activeSubs]
-  );
-
-  const yearlyTotal = monthlyTotal * 12;
-
-  const byCategory = useMemo(() => {
-    const map: Record<string, number> = {};
-    activeSubs.forEach(s => {
-      if (!map[s.category]) map[s.category] = 0;
-      map[s.category] += toMonthly(parseFloat(String(s.amount)) || 0, s.cycle);
-    });
-    return map;
-  }, [activeSubs]);
-
-  const upcoming = useMemo(() =>
-    activeSubs
-      .map(s => ({ ...s, nextDate: getNextBillingDate(s.startDate, s.cycle) }))
-      .sort((a, b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime())
-      .slice(0, 5),
-    [activeSubs]
-  );
-
-  const baseCurrency = activeSubs[0]?.currency || "USD";
-
-  const filteredSubs = useMemo(() => {
-    let list = showInactive ? subs : activeSubs;
-    if (filterCat !== "all") list = list.filter(s => s.category === filterCat);
-    if (searchQ) list = list.filter(s => s.name.toLowerCase().includes(searchQ.toLowerCase()));
-    list = [...list].sort((a, b) => {
-      if (sortBy === "name") return a.name.localeCompare(b.name);
-      if (sortBy === "amount") return toMonthly(parseFloat(String(b.amount)) || 0, b.cycle) - toMonthly(parseFloat(String(a.amount)) || 0, a.cycle);
-      if (sortBy === "next") return new Date(getNextBillingDate(a.startDate, a.cycle)).getTime() - new Date(getNextBillingDate(b.startDate, b.cycle)).getTime();
-      return 0;
-    });
-    return list;
-  }, [subs, activeSubs, filterCat, searchQ, sortBy, showInactive]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -141,7 +116,7 @@ export default function App() {
         const content = e.target?.result as string;
         const parsed = JSON.parse(content);
         if (Array.isArray(parsed)) {
-          setSubs(parsed);
+          dispatch(importSubscriptions(parsed));
           showToast("Data imported successfully!");
         } else {
           showToast("Invalid data format.", "error");
@@ -222,15 +197,15 @@ export default function App() {
         {view === "list" && (
           <ListView
             filteredSubs={filteredSubs}
-            filterCat={filterCat} setFilterCat={setFilterCat}
-            sortBy={sortBy} setSortBy={setSortBy}
-            searchQ={searchQ} setSearchQ={setSearchQ}
-            showInactive={showInactive} setShowInactive={setShowInactive}
+            filterCat={filterCat} setFilterCat={(value) => dispatch(setFilterCat(value))}
+            sortBy={sortBy} setSortBy={(value) => dispatch(setSortBy(value))}
+            searchQ={searchQ} setSearchQ={(value) => dispatch(setSearchQ(value))}
+            showInactive={showInactive} setShowInactive={(value) => dispatch(setShowInactive(value))}
             openAdd={openAdd}
             openEdit={openEdit}
             handleDelete={handleDelete}
-            toggleActive={toggleActive}
-            toggleMonth={toggleMonth}
+            toggleActive={(id) => dispatch(toggleActive(id))}
+            toggleMonth={(id, monthKey) => dispatch(toggleMonth({ id, monthKey }))}
           />
         )}
 
